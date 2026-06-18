@@ -26,8 +26,9 @@ export default function RootLayout({
       lang="en" className={cn("dark", "font-sans", geist.variable)}
     >
       <body
-        className={`${monaSans.className} antialiased`}
-      >{children}</body>
+        className={`${monaSans.className} antialiased pattern`}
+      >{children}
+      </body>
     </html>
   );
 }
