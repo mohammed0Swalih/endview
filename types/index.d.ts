@@ -14,6 +14,7 @@ interface Feedback {
 }
 
 interface Interview {
+  InterviewId: Key | null | undefined;
   id: string;
   role: string;
   level: string;
