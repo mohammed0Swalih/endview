@@ -60,7 +60,12 @@ const AuthForm = ({ type }: { type: FormType }) => {
           return;
         }
 
-        await signIn({email, idToken}); //sets the session cookie for the logged in user.
+        const result = await signIn({ email, idToken }); //sets the session cookie for the logged in user.
+
+        if (!result?.success) {
+          toast.error(result?.message || "Sign in failed. Please try again.");
+          return;
+        }
 
         toast.success("Signed in successfully.");
         router.push("/");
