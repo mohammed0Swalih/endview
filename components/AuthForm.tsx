@@ -11,6 +11,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import FormField from "./FormField";
+import { auth } from "@/firebase/client";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { signIn, signUp } from "@/lib/actions/auth.action";
 
 const authFormSchema = (type: FormType) => {
   return z.object({
@@ -36,11 +39,29 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       if (type === "sign-up") {
-        console.log("SIGN UP", data);
+        const { name, email, password } = data;
+
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password); //registers a new user in firebase authentication.
+        const result = await signUp({uid: userCredential.user.uid, name: name!, email, password}); //saves the user data in firestore database.
+        
+        if(!result.success){
+          toast.error(result.message);
+          return;
+        }
+
         toast.success("Account created successfully. Please sign in.");
         router.push("/sign-in");
       } else {
-        console.log("SIGN IN", data);
+        const { email, password } = data;
+        const userCredential = await signInWithEmailAndPassword(auth, email, password); //logs in the user with firebase authentication.
+        const idToken = await userCredential.user.getIdToken(); //gets the id token for the logged in user.
+        if(!idToken){
+          toast.error("Sign in failed. Please try again.");
+          return;
+        }
+
+        await signIn({email, idToken}); //sets the session cookie for the logged in user.
+
         toast.success("Signed in successfully.");
         router.push("/");
       }
