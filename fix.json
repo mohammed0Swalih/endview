@@ -1,0 +1,96 @@
+{
+  "nodes": [
+    {
+      "name": "introduction",
+      "type": "conversation",
+      "isStart": true,
+      "prompt": "Greet the user. Tell them you'll collect the information needed to create a personalized interview. Ask one question at a time and wait for the answer before asking the next. Extract the required variables as they are provided.",
+      "messagePlan": {
+        "firstMessage": "Hello {{username}}. Let's start setting up your interview. Are you ready?"
+      },
+      "variableExtractionPlan": {
+        "output": [
+          {
+            "enum": [],
+            "type": "string",
+            "title": "role",
+            "description": "The job role or position the user wants to practice for (e.g. Frontend Developer, Data Scientist)"
+          },
+          {
+            "enum": [],
+            "type": "string",
+            "title": "level",
+            "description": "The experience level of the user (e.g. Junior, Mid, Senior)"
+          },
+          {
+            "enum": [],
+            "type": "string",
+            "title": "type",
+            "description": "The type of interview questions to focus on (e.g. Technical, Behavioral, Mixed)"
+          },
+          {
+            "enum": [],
+            "type": "string",
+            "title": "techstack",
+            "description": "The technologies or tools relevant to the role (e.g. React, Node.js, Python) — comma separated"
+          },
+          {
+            "enum": [],
+            "type": "string",
+            "title": "amount",
+            "description": "The number of interview questions to generate (e.g. 5, 10)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "apiRequest",
+      "type": "tool",
+      "tool": {
+        "type": "apiRequest",
+        "name": "apiretriver",
+        "method": "POST",
+        "url": "https://endview.vercel.app/API/vapi/generate",
+        "description": "Calls the backend to generate interview questions based on collected info",
+        "body": {
+          "type": "object",
+          "properties": {
+            "role":      { "type": "string", "description": "Job role" },
+            "type":      { "type": "string", "description": "Interview type" },
+            "level":     { "type": "string", "description": "Experience level" },
+            "techstack": { "type": "string", "description": "Tech stack comma separated" },
+            "amount":    { "type": "string", "description": "Number of questions" },
+            "userid":    { "type": "string", "description": "User ID" }
+          },
+          "required": ["role", "type", "level", "techstack", "amount", "userid"]
+        }
+      }
+    },
+    {
+      "name": "conversation_end",
+      "type": "conversation",
+      "prompt": "Say the interview has been generated and thank the user for the call",
+      "messagePlan": {
+        "firstMessage": "The interview has been generated"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "introduction",
+      "to": "apiRequest",
+      "condition": {
+        "type": "ai",
+        "prompt": "if the user said yes"
+      }
+    },
+    {
+      "from": "apiRequest",
+      "to": "conversation_end",
+      "condition": {
+        "type": "ai",
+        "prompt": "if the api request was successful"
+      }
+    }
+  ]
+}

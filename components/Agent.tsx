@@ -1,10 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { vapi } from "@/lib/vapi.sdk";
+import { interviewer, generateAssistant } from "@/constants";
 import { cn } from "@/lib/utils";
+import { createFeedback } from "@/lib/actions/general.action";
 
-// TODO: replace with real Vapi CallStatus when @vapi-ai/web is installed
 enum CallStatus {
   INACTIVE = "INACTIVE",
   CONNECTING = "CONNECTING",
@@ -12,20 +15,114 @@ enum CallStatus {
   FINISHED = "FINISHED",
 }
 
+interface SavedMessage {
+  role: "user" | "system" | "assistant";
+  content: string;
+}
+
 const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) => {
+  const router = useRouter();
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
+  const [messages, setMessages] = useState<SavedMessage[]>([]);
+
+  useEffect(() => {
+    const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
+    const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
+    const onSpeechStart = () => setIsSpeaking(true);
+    const onSpeechEnd = () => setIsSpeaking(false);
+    const onMessage = (message: any) => {
+      if (message.type === "transcript" && message.transcriptType === "final") {//stroing messages in state for feedback generation
+        const newMessage = { role: message.role, content: message.transcript };
+        setMessages((prev) => [...prev, newMessage]);
+      }
+
+      // Handle function tool call for generate flow
+      if (message.type === "tool-calls" || message.type === "function-call") {
+        const toolCall = message.toolCallList?.[0] || message.functionCall; //toolcall containes the function request and parameters
+        if (toolCall) {
+          const name = toolCall.function?.name || toolCall.name;
+          if (name === "generateInterview") {
+            const args = //gets the args vapi sent.. that is role, type, techstack....
+              typeof toolCall.function?.arguments === "string"
+                ? JSON.parse(toolCall.function.arguments)
+                : toolCall.function?.arguments || toolCall.parameters || {};
+
+            fetch("/API/vapi/generate", { //sending the args to the backend for generating interview questions
+              method: "POST", //sending the data to the backend for generating interview questions
+              headers: { "Content-Type": "application/json" }, // The data I'm sending is JSON.
+              body: JSON.stringify({ ...args, userid: userId }), //till now the userid wasnt there in the args.. so now this line adds userid to args 
+            });
+          }
+        }
+      }
+    };
+    const onError = (error: any) => console.error("Vapi error:", error?.message, error?.errorMsg, error?.error, JSON.stringify(error));
+
+    vapi.on("call-start", onCallStart);
+    vapi.on("call-end", onCallEnd);
+    vapi.on("speech-start", onSpeechStart);
+    vapi.on("speech-end", onSpeechEnd);
+    vapi.on("message", onMessage);
+    vapi.on("error", onError);
+
+    return () => { //cleaning up the event listeners when the component unmounts
+      vapi.off("call-start", onCallStart);
+      vapi.off("call-end", onCallEnd);
+      vapi.off("speech-start", onSpeechStart);
+      vapi.off("speech-end", onSpeechEnd);
+      vapi.off("message", onMessage);
+      vapi.off("error", onError);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      setLastMessage(messages[messages.length - 1].content);
+    }
+
+    const handleGenerateFeedback = async (messages: SavedMessage[]) => {
+      const { success, feedbackId: id } = await createFeedback({
+        interviewId: interviewId!,
+        userId: userId!,
+        transcript: messages,
+        feedbackId: undefined,
+      });
+
+      if (success && id) {
+        router.push(`/interview/${interviewId}/feedback`);
+      } else {
+        router.push("/");
+      }
+    };
+
+    if (callStatus === CallStatus.FINISHED) {
+      if (type === "generate") {
+        router.push("/");
+      } else {
+        handleGenerateFeedback(messages);
+      }
+    }
+  }, [callStatus, messages]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
-    // TODO: wire up vapi.start() when @vapi-ai/web is installed
-    setTimeout(() => setCallStatus(CallStatus.ACTIVE), 1000);
+
+    if (type === "generate") {
+      await vapi.start(generateAssistant);
+    } else {
+      await vapi.start(interviewer, {
+        variableValues: {
+          questions: questions!.join("\n"),
+        },
+      });
+    }
   };
 
   const handleDisconnect = () => {
     setCallStatus(CallStatus.FINISHED);
-    // TODO: vapi.stop()
+    vapi.stop();
   };
 
   return (

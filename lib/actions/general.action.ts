@@ -25,5 +25,5 @@ export async function getFeedbackByInterviewId(
 
 export async function createFeedback(params: CreateFeedbackParams) {
   // Will be implemented with Firebase
-  return { success: false };
+  return { success: false, feedbackId: null };
 }
