@@ -23,6 +23,7 @@ interface Interview {
   userId: string;
   type: string;
   finalized: boolean;
+  positionId?: string;
 }
 
 interface CreateFeedbackParams {
@@ -36,6 +37,43 @@ interface User {
   name: string;
   email: string;
   id: string;
+  isAdmin?: boolean;
+}
+
+interface Position {
+  id: string;
+  title: string;
+  description: string;
+  department: string;
+  level: string;
+  type: string;
+  techstack: string[];
+  questions: string[];
+  isOpen: boolean;
+  createdAt: string;
+}
+
+interface CreatePositionParams {
+  title: string;
+  description: string;
+  department: string;
+  level: string;
+  type: string;
+  techstack: string[];
+  questions: string[];
+}
+
+interface GetCandidatesByPositionParams {
+  positionId: string;
+}
+
+interface CandidateResult {
+  interviewId: string;
+  userId: string;
+  userName: string;
+  totalScore: number;
+  createdAt: string;
+  feedbackId: string;
 }
 
 interface InterviewCardProps {

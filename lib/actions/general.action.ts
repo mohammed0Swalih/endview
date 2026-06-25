@@ -63,6 +63,124 @@ export async function getFeedbackByInterviewId(
   return { id: doc.id, ...doc.data() } as Feedback;
 }
 
+// ─── Position Actions ────────────────────────────────────────────────────────
+
+export async function createPosition(params: CreatePositionParams): Promise<{ success: boolean; positionId: string | null }> {
+  try {
+    const ref = db.collection("positions").doc();
+    await ref.set({
+      ...params,
+      isOpen: true,
+      createdAt: new Date().toISOString(),
+    });
+    return { success: true, positionId: ref.id };
+  } catch (e) {
+    console.error("Error creating position:", e);
+    return { success: false, positionId: null };
+  }
+}
+
+export async function getPositions(): Promise<Position[]> {
+  const snap = await db
+    .collection("positions")
+    .where("isOpen", "==", true)
+    .orderBy("createdAt", "desc")
+    .get();
+  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Position[];
+}
+
+export async function getAllPositions(): Promise<Position[]> {
+  const snap = await db
+    .collection("positions")
+    .orderBy("createdAt", "desc")
+    .get();
+  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Position[];
+}
+
+export async function getPositionById(id: string): Promise<Position | null> {
+  const doc = await db.collection("positions").doc(id).get();
+  if (!doc.exists) return null;
+  return { id: doc.id, ...doc.data() } as Position;
+}
+
+export async function togglePositionStatus(positionId: string, isOpen: boolean) {
+  await db.collection("positions").doc(positionId).update({ isOpen });
+}
+
+export async function getCandidatesByPosition(positionId: string): Promise<CandidateResult[]> {
+  // Get all interviews for this position
+  const interviewsSnap = await db
+    .collection("interviews")
+    .where("positionId", "==", positionId)
+    .where("finalized", "==", true)
+    .orderBy("createdAt", "desc")
+    .get();
+
+  const results: CandidateResult[] = [];
+
+  for (const interviewDoc of interviewsSnap.docs) {
+    const interview = interviewDoc.data();
+
+    // Get feedback for this interview
+    const feedbackSnap = await db
+      .collection("feedback")
+      .where("interviewId", "==", interviewDoc.id)
+      .where("userId", "==", interview.userId)
+      .limit(1)
+      .get();
+
+    // Get user name
+    const userDoc = await db.collection("users").doc(interview.userId).get();
+    const userName = userDoc.exists ? (userDoc.data()?.name ?? "Unknown") : "Unknown";
+
+    if (!feedbackSnap.empty) {
+      const feedback = feedbackSnap.docs[0].data();
+      results.push({
+        interviewId: interviewDoc.id,
+        userId: interview.userId,
+        userName,
+        totalScore: feedback.totalScore,
+        createdAt: interview.createdAt,
+        feedbackId: feedbackSnap.docs[0].id,
+      });
+    }
+  }
+
+  return results;
+}
+
+export async function createInterviewForPosition(params: {
+  positionId: string;
+  userId: string;
+  role: string;
+  level: string;
+  type: string;
+  techstack: string[];
+  questions: string[];
+}): Promise<{ success: boolean; interviewId: string | null }> {
+  try {
+    const ref = db.collection("interviews").doc();
+    await ref.set({
+      positionId: params.positionId,
+      userId: params.userId,
+      role: params.role,
+      level: params.level,
+      type: params.type,
+      techstack: params.techstack,
+      questions: params.questions,
+      finalized: true,
+      coverImage: "",
+      createdAt: new Date().toISOString(),
+    });
+    return { success: true, interviewId: ref.id };
+  } catch (e) {
+    console.error("Error creating interview for position:", e);
+    return { success: false, interviewId: null };
+  }
+}
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId } = params;
 
