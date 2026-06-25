@@ -58,7 +58,13 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
         }
       }
     };
-    const onError = (error: any) => console.error("Vapi error:", error?.message, error?.errorMsg, error?.error, JSON.stringify(error));
+    const onError = (error: any) => {
+      if (error?.error?.type === "ejected" || error?.errorMsg === "Meeting has ended") {
+        setCallStatus(CallStatus.FINISHED);
+      } else {
+        console.error("Vapi error:", JSON.stringify(error));
+      }
+    };
 
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
