@@ -26,6 +26,7 @@ const Agent = ({ userName, userId, type, interviewId, questions, role, level, in
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
   const [messages, setMessages] = useState<SavedMessage[]>([]);
+  const messagesRef = useRef<SavedMessage[]>([]);
   const feedbackTriggered = useRef(false);
 
   useEffect(() => {
@@ -36,7 +37,11 @@ const Agent = ({ userName, userId, type, interviewId, questions, role, level, in
     const onMessage = (message: any) => {
       if (message.type === "transcript" && message.transcriptType === "final") {//stroing messages in state for feedback generation
         const newMessage = { role: message.role, content: message.transcript };
-        setMessages((prev) => [...prev, newMessage]);
+        setMessages((prev) => {
+          const updated = [...prev, newMessage];
+          messagesRef.current = updated;
+          return updated;
+        });
       }
 
       // Handle function tool call for generate flow
@@ -107,13 +112,17 @@ const Agent = ({ userName, userId, type, interviewId, questions, role, level, in
       feedbackTriggered.current = true;
       if (type === "generate") {
         router.push("/");
-      } else if (messages.length >= 2) {
-        // Enough transcript captured — generate feedback client-side
-        handleGenerateFeedback(messages);
       } else {
-        // Too little transcript (call dropped early) — webhook will handle feedback
-        // Just go home; feedback will appear once webhook fires
-        router.push("/");
+        // Wait 2s for any final transcripts to finish arriving before generating feedback
+        setTimeout(() => {
+          const finalMessages = messagesRef.current;
+          if (finalMessages.length >= 2) {
+            handleGenerateFeedback(finalMessages);
+          } else {
+            // Too little transcript — webhook will handle it server-side
+            router.push("/");
+          }
+        }, 2000);
       }
     }
   }, [callStatus, messages]);
