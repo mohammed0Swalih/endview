@@ -28,6 +28,10 @@ const Page = async ({ params }: RouteParams) => {
         interviewId={id}
         type="interview"
         questions={interview.questions}
+        role={interview.role}
+        level={interview.level}
+        interviewType={interview.type}
+        techstack={interview.techstack}
       />
     </>
   );

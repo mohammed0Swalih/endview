@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
-import { cn, getRandomInterviewCover } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface PositionCardProps {
   position: Position;
@@ -11,7 +11,8 @@ interface PositionCardProps {
 }
 
 const PositionCard = ({ position, isAdmin = false }: PositionCardProps) => {
-  const { id, title, department, level, type, techstack, createdAt, isOpen } = position;
+  const { id, title, department, level, type, techstack, createdAt, isOpen, logoUrl } = position;
+  const logo = logoUrl || "/robot.png";
 
   const normalizedType = /mix/gi.test(type) ? "Mixed" : type;
 
@@ -43,13 +44,13 @@ const PositionCard = ({ position, isAdmin = false }: PositionCardProps) => {
             </div>
           )}
 
-          {/* Cover Image */}
+          {/* Logo */}
           <Image
-            src={getRandomInterviewCover()}
-            alt="cover-image"
+            src={logo}
+            alt="company logo"
             width={90}
             height={90}
-            className="rounded-full object-fit size-[90px]"
+            className="rounded-full object-cover size-[90px]"
           />
 
           {/* Title */}

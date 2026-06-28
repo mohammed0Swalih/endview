@@ -51,6 +51,9 @@ interface Position {
   questions: string[];
   isOpen: boolean;
   createdAt: string;
+  logoUrl?: string;
+  visibility: "public" | "invite";
+  invitedEmails: string[];
 }
 
 interface CreatePositionParams {
@@ -61,6 +64,9 @@ interface CreatePositionParams {
   type: string;
   techstack: string[];
   questions: string[];
+  logoUrl?: string;
+  visibility: "public" | "invite";
+  invitedEmails: string[];
 }
 
 interface GetCandidatesByPositionParams {
@@ -92,6 +98,10 @@ interface AgentProps {
   feedbackId?: string;
   type: "generate" | "interview";
   questions?: string[];
+  role?: string;
+  level?: string;
+  interviewType?: string;
+  techstack?: string[];
 }
 
 interface RouteParams {

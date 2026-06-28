@@ -18,7 +18,7 @@ const Page = async () => {
 
   const [userInterviews, openPositions] = await Promise.all([
     getInterviewsByUserId(user?.id!),
-    getPositions(),
+    getPositions(user?.email!),
   ]);
 
   // Interviews tied to real positions (company interviews)

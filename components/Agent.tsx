@@ -20,7 +20,7 @@ interface SavedMessage {
   content: string;
 }
 
-const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) => {
+const Agent = ({ userName, userId, type, interviewId, questions, role, level, interviewType, techstack }: AgentProps) => {
   const router = useRouter();
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -59,11 +59,10 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
       }
     };
     const onError = (error: any) => {
-      if (error?.error?.type === "ejected" || error?.errorMsg === "Meeting has ended") {
-        setCallStatus(CallStatus.FINISHED);
-      } else {
-        console.error("Vapi error:", JSON.stringify(error));
-      }
+      // Call is over — set FINISHED so UI cleans up
+      // Don't force feedback generation here; the server webhook handles it reliably
+      console.error("Vapi error:", JSON.stringify(error));
+      setCallStatus(CallStatus.FINISHED);
     };
 
     vapi.on("call-start", onCallStart);
@@ -106,8 +105,13 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
     if (callStatus === CallStatus.FINISHED) {
       if (type === "generate") {
         router.push("/");
-      } else {
+      } else if (messages.length >= 2) {
+        // Enough transcript captured — generate feedback client-side
         handleGenerateFeedback(messages);
+      } else {
+        // Too little transcript (call dropped early) — webhook will handle feedback
+        // Just go home; feedback will appear once webhook fires
+        router.push("/");
       }
     }
   }, [callStatus, messages]);
@@ -118,9 +122,16 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
     if (type === "generate") {
       await vapi.start(generateAssistant);
     } else {
+      const hasQuestions = questions && questions.length > 0;
       await vapi.start(interviewer, {
         variableValues: {
-          questions: questions!.join("\n"),
+          questions: hasQuestions
+            ? questions!.join("\n")
+            : `Generate 8 relevant interview questions for a ${level ?? ""} ${role ?? "Software Engineer"} position. Focus on ${interviewType ?? "Mixed"} topics. Tech stack: ${techstack?.join(", ") ?? "general"}. Ask them one by one naturally.`,
+        },
+        metadata: {
+          interviewId: interviewId ?? "",
+          userId: userId ?? "",
         },
       });
     }

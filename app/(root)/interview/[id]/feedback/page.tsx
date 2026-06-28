@@ -3,7 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/actions/auth.action";
-import { getInterviewById, getFeedbackByInterviewId } from "@/lib/actions/general.action";
+import {
+  getInterviewById,
+  getFeedbackByInterviewId,
+  getFeedbackByInterviewIdAdmin,
+} from "@/lib/actions/general.action";
 import { Button } from "@/components/ui/button";
 
 const Page = async ({ params }: RouteParams) => {
@@ -13,23 +17,26 @@ const Page = async ({ params }: RouteParams) => {
   const interview = await getInterviewById(id);
   if (!interview) redirect("/");
 
-  const feedback = await getFeedbackByInterviewId({
-    interviewId: id,
-    userId: user?.id!,
-  });
+  // Admin can view any candidate's feedback; candidate sees only their own
+  const feedback = user?.isAdmin
+    ? await getFeedbackByInterviewIdAdmin(id)
+    : await getFeedbackByInterviewId({ interviewId: id, userId: user?.id! });
+
   if (!feedback) redirect(`/interview/${id}`);
+
+  const isAdmin = user?.isAdmin;
 
   return (
     <section className="section-feedback">
       <div className="flex flex-row justify-center">
         <h1 className="text-4xl font-semibold">
-          Feedback on the <span className="text-primary-200 capitalize">{interview.role}</span> Interview
+          Feedback on the{" "}
+          <span className="text-primary-200 capitalize">{interview.role}</span> Interview
         </h1>
       </div>
 
       <div className="flex flex-row justify-center">
         <div className="flex flex-row gap-5">
-          {/* Overall Score */}
           <div className="flex flex-row gap-2 items-center">
             <Image src="/star.svg" width={22} height={22} alt="star" />
             <p>
@@ -37,8 +44,6 @@ const Page = async ({ params }: RouteParams) => {
               <span className="text-primary-200 font-bold">{feedback.totalScore}/100</span>
             </p>
           </div>
-
-          {/* Date */}
           <div className="flex flex-row gap-2">
             <Image src="/calendar.svg" width={22} height={22} alt="calendar" />
             <p>{dayjs(feedback.createdAt).format("MMM D, YYYY")}</p>
@@ -89,16 +94,26 @@ const Page = async ({ params }: RouteParams) => {
       </div>
 
       <div className="flex flex-row gap-4 justify-center">
-        <Button className="btn-secondary flex-1">
-          <Link href="/" className="flex w-full justify-center">
-            Back to Dashboard
-          </Link>
-        </Button>
-        <Button className="btn-primary flex-1">
-          <Link href={`/interview/${id}`} className="flex w-full justify-center">
-            Retake Interview
-          </Link>
-        </Button>
+        {isAdmin ? (
+          <Button className="btn-secondary flex-1">
+            <Link href={`/admin/positions/${interview.positionId ?? ""}`} className="flex w-full justify-center">
+              ← Back to Candidates
+            </Link>
+          </Button>
+        ) : (
+          <>
+            <Button className="btn-secondary flex-1">
+              <Link href="/" className="flex w-full justify-center">
+                Back to Dashboard
+              </Link>
+            </Button>
+            <Button className="btn-primary flex-1">
+              <Link href={`/interview/${id}`} className="flex w-full justify-center">
+                Retake Interview
+              </Link>
+            </Button>
+          </>
+        )}
       </div>
     </section>
   );

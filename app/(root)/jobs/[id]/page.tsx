@@ -6,7 +6,6 @@ import {
   getInterviewsByUserId,
 } from "@/lib/actions/general.action";
 import { db } from "@/firebase/admin";
-import { getRandomInterviewCover } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -46,8 +45,8 @@ const JobDetailPage = async ({ params }: RouteParams) => {
       <div className="card-border p-8 flex flex-col gap-4">
         <div className="flex flex-row gap-6 items-start">
           <Image
-            src={getRandomInterviewCover()}
-            alt="cover"
+            src={position.logoUrl || "/robot.png"}
+            alt="company logo"
             width={90}
             height={90}
             className="rounded-full object-cover size-[90px]"
@@ -75,10 +74,16 @@ const JobDetailPage = async ({ params }: RouteParams) => {
       <div className="card-border p-6 flex flex-col gap-4">
         <h2 className="font-semibold text-lg">What to Expect</h2>
         <ul className="flex flex-col gap-2 text-sm text-light-400">
-          <li>• {position.questions.length} questions covering {position.type.toLowerCase()} topics</li>
+          <li>• {position.questions.length > 0
+              ? `${position.questions.length} questions covering ${position.type.toLowerCase()} topics`
+              : `AI-generated questions covering ${position.type.toLowerCase()} topics`}
+          </li>
           <li>• AI voice interviewer — speak your answers naturally</li>
           <li>• Detailed feedback report with scores across 5 categories</li>
-          <li>• Takes approximately {Math.ceil(position.questions.length * 2.5)} minutes</li>
+          <li>• Takes approximately {position.questions.length > 0
+              ? `${Math.ceil(position.questions.length * 2.5)} minutes`
+              : "15–20 minutes"}
+          </li>
         </ul>
       </div>
 
@@ -101,7 +106,11 @@ const JobDetailPage = async ({ params }: RouteParams) => {
           </>
         ) : (
           <>
-            <p className="text-light-400">Ready? The AI interviewer will ask you {position.questions.length} questions.</p>
+            <p className="text-light-400">
+            Ready? {position.questions.length > 0
+              ? `The AI interviewer will ask you ${position.questions.length} questions.`
+              : "The AI interviewer will generate and ask questions based on your role."}
+          </p>
             <StartInterviewButton
               positionId={id}
               userId={user.id}

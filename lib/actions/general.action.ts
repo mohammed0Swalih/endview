@@ -63,6 +63,22 @@ export async function getFeedbackByInterviewId(
   return { id: doc.id, ...doc.data() } as Feedback;
 }
 
+// Admin version — fetches feedback for any user on a given interview
+export async function getFeedbackByInterviewIdAdmin(
+  interviewId: string
+): Promise<Feedback | null> {
+  const feedback = await db
+    .collection("feedback")
+    .where("interviewId", "==", interviewId)
+    .limit(1)
+    .get();
+
+  if (feedback.empty) return null;
+
+  const doc = feedback.docs[0];
+  return { id: doc.id, ...doc.data() } as Feedback;
+}
+
 // ─── Position Actions ────────────────────────────────────────────────────────
 
 export async function createPosition(params: CreatePositionParams): Promise<{ success: boolean; positionId: string | null }> {
@@ -80,13 +96,19 @@ export async function createPosition(params: CreatePositionParams): Promise<{ su
   }
 }
 
-export async function getPositions(): Promise<Position[]> {
+export async function getPositions(userEmail: string): Promise<Position[]> {
   const snap = await db
     .collection("positions")
     .where("isOpen", "==", true)
     .orderBy("createdAt", "desc")
     .get();
-  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Position[];
+
+  const all = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Position[];
+
+  // Filter: public positions are visible to all; invite-only only to invited emails
+  return all.filter((p) =>
+    p.visibility === "public" || p.invitedEmails?.includes(userEmail)
+  );
 }
 
 export async function getAllPositions(): Promise<Position[]> {
@@ -105,6 +127,14 @@ export async function getPositionById(id: string): Promise<Position | null> {
 
 export async function togglePositionStatus(positionId: string, isOpen: boolean) {
   await db.collection("positions").doc(positionId).update({ isOpen });
+}
+
+export async function updatePositionInvites(
+  positionId: string,
+  invitedEmails: string[],
+  visibility: "public" | "invite"
+) {
+  await db.collection("positions").doc(positionId).update({ invitedEmails, visibility });
 }
 
 export async function getCandidatesByPosition(positionId: string): Promise<CandidateResult[]> {
