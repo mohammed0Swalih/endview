@@ -129,6 +129,16 @@ export async function togglePositionStatus(positionId: string, isOpen: boolean) 
   await db.collection("positions").doc(positionId).update({ isOpen });
 }
 
+export async function deletePosition(positionId: string): Promise<{ success: boolean }> {
+  try {
+    await db.collection("positions").doc(positionId).delete();
+    return { success: true };
+  } catch (e) {
+    console.error("Error deleting position:", e);
+    return { success: false };
+  }
+}
+
 export async function updatePositionInvites(
   positionId: string,
   invitedEmails: string[],

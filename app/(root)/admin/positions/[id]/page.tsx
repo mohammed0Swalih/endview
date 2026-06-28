@@ -8,6 +8,7 @@ import { getPositionById, getCandidatesByPosition } from "@/lib/actions/general.
 import DisplayTechIcons from "@/components/DisplayTechIcons";
 import TogglePositionButton from "@/components/TogglePositionButton";
 import ManageInvites from "@/components/ManageInvites";
+import DeletePositionButton from "@/components/DeletePositionButton";
 
 const AdminPositionPage = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -40,11 +41,12 @@ const AdminPositionPage = async ({ params }: RouteParams) => {
           <p className="text-light-400">{position.department} · {position.level} · {position.type}</p>
           {position.description && <p>{position.description}</p>}
           <DisplayTechIcons techStack={position.techstack} />
-          <div className="flex flex-row gap-3">
+          <div className="flex flex-row gap-3 flex-wrap">
             <TogglePositionButton positionId={id} isOpen={position.isOpen} />
             <Button asChild className="btn-secondary">
               <Link href="/admin">← Back</Link>
             </Button>
+            <DeletePositionButton positionId={id} />
           </div>
         </div>
         <Image src="/robot.png" alt="robot" width={300} height={300} className="max-sm:hidden opacity-80" />
