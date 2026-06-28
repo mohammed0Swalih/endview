@@ -200,9 +200,9 @@ After delivering your closing remarks, immediately call the endCall function to 
 - This is a voice conversation, so keep your responses short, like in a real conversation. Don’t ramble for too long.`,
       },
     ],
-    endCallFunctionEnabled: true,
   },
-};
+  endCallFunctionEnabled: true,
+} as any;
 
 export const feedbackSchema = z.object({
   totalScore: z.number(),
