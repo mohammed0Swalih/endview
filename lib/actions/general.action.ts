@@ -233,7 +233,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
       .join("");
 
     const { object } = await generateObject({
-      model: groq("llama-3.3-70b-versatile"),
+      model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
       schema: feedbackSchema,
       prompt: `
         You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories.

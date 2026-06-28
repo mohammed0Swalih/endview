@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     console.log("Webhook: calling Groq...");
 
     const { object: feedbackData } = await generateObject({
-      model: groq("llama-3.3-70b-versatile"),
+      model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
       schema: feedbackSchema,
       prompt: `
         You are an expert interviewer. Analyze this interview transcript and provide structured feedback.
