@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer, generateAssistant } from "@/constants";
@@ -26,6 +26,7 @@ const Agent = ({ userName, userId, type, interviewId, questions, role, level, in
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
   const [messages, setMessages] = useState<SavedMessage[]>([]);
+  const feedbackTriggered = useRef(false);
 
   useEffect(() => {
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
@@ -102,7 +103,8 @@ const Agent = ({ userName, userId, type, interviewId, questions, role, level, in
       }
     };
 
-    if (callStatus === CallStatus.FINISHED) {
+    if (callStatus === CallStatus.FINISHED && !feedbackTriggered.current) {
+      feedbackTriggered.current = true;
       if (type === "generate") {
         router.push("/");
       } else if (messages.length >= 2) {
@@ -138,8 +140,8 @@ const Agent = ({ userName, userId, type, interviewId, questions, role, level, in
   };
 
   const handleDisconnect = () => {
-    setCallStatus(CallStatus.FINISHED);
     vapi.stop();
+    setCallStatus(CallStatus.FINISHED);
   };
 
   return (

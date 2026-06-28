@@ -13,7 +13,12 @@ export async function POST(request: Request) {
     }
 
     const { call, transcript, messages: callMessages } = message;
-    const metadata = call?.metadata ?? {};
+    // Vapi puts metadata in assistantOverrides.metadata (and mirrors it in assistant.metadata)
+    const metadata =
+      call?.assistantOverrides?.metadata ??
+      message.assistant?.metadata ??
+      call?.metadata ??
+      {};
     const { interviewId, userId } = metadata;
 
     if (!interviewId || !userId) {
