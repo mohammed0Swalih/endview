@@ -79,7 +79,6 @@ export async function getFeedbackByInterviewIdAdmin(
   return { id: doc.id, ...doc.data() } as Feedback;
 }
 
-// ─── Position Actions ────────────────────────────────────────────────────────
 
 export async function createPosition(params: CreatePositionParams): Promise<{ success: boolean; positionId: string | null }> {
   try {
@@ -219,7 +218,7 @@ export async function createInterviewForPosition(params: {
   }
 }
 
-// ─── Feedback ─────────────────────────────────────────────────────────────────
+//Feedback
 
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId } = params;
