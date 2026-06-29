@@ -211,12 +211,11 @@ export const interviewerArabic: CreateAssistantDTO = {
   transcriber: {
     provider: "deepgram",
     model: "nova-2",
-    language: "ar",
+    language: "multi",
   },
   voice: {
     provider: "11labs",
     voiceId: "sarah",
-    model: "eleven_multilingual_v2",
     stability: 0.4,
     similarityBoost: 0.8,
     speed: 0.9,
