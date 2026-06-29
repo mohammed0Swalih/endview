@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { vapi } from "@/lib/vapi.sdk";
-import { interviewer, interviewerArabic, generateAssistant } from "@/constants";
+import { interviewer, generateAssistant } from "@/constants";
 import { cn } from "@/lib/utils";
 import { createFeedback } from "@/lib/actions/general.action";
 
@@ -28,7 +28,6 @@ const Agent = ({ userName, userId, type, interviewId, questions, role, level, in
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const messagesRef = useRef<SavedMessage[]>([]);
   const feedbackTriggered = useRef(false);
-  const [language, setLanguage] = useState<"en" | "ar">("en");
 
   useEffect(() => {
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
@@ -135,8 +134,7 @@ const Agent = ({ userName, userId, type, interviewId, questions, role, level, in
       await vapi.start(generateAssistant);
     } else {
       const hasQuestions = questions && questions.length > 0;
-      const assistantConfig = language === "ar" ? interviewerArabic : interviewer;
-      await vapi.start(assistantConfig, {
+      await vapi.start(interviewer, {
         variableValues: {
           questions: hasQuestions
             ? questions!.join("\n")
@@ -198,35 +196,7 @@ const Agent = ({ userName, userId, type, interviewId, questions, role, level, in
         </div>
       )}
 
-      {/* Language toggle — only before call starts */}
-      {callStatus === CallStatus.INACTIVE && type !== "generate" && (
-        <div className="w-full flex justify-center gap-3 mt-2">
-          <button
-            onClick={() => setLanguage("en")}
-            className={cn(
-              "px-5 py-2 rounded-full text-sm font-semibold border transition-colors",
-              language === "en"
-                ? "border-primary-200 bg-primary-200/10 text-primary-200"
-                : "border-dark-300 text-light-400 hover:border-light-400"
-            )}
-          >
-            🇬🇧 English
-          </button>
-          <button
-            onClick={() => setLanguage("ar")}
-            className={cn(
-              "px-5 py-2 rounded-full text-sm font-semibold border transition-colors",
-              language === "ar"
-                ? "border-primary-200 bg-primary-200/10 text-primary-200"
-                : "border-dark-300 text-light-400 hover:border-light-400"
-            )}
-          >
-            🇸🇦 العربية
-          </button>
-        </div>
-      )}
-
-      <div className="w-full flex justify-center">
+<div className="w-full flex justify-center">
         {callStatus !== CallStatus.ACTIVE ? (
           <button className="relative btn-call" onClick={handleCall}>
             <span

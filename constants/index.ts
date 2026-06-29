@@ -204,61 +204,6 @@ After delivering your closing remarks, immediately call the endCall function to 
   endCallFunctionEnabled: true,
 } as any;
 
-export const interviewerArabic: CreateAssistantDTO = {
-  name: "Interviewer",
-  firstMessage:
-    "مرحباً! شكراً لأخذك الوقت للحديث معي اليوم. يسعدني التعرف عليك وعلى خبرتك المهنية.",
-  transcriber: {
-    provider: "deepgram",
-    model: "nova-2",
-    language: "multi",
-  },
-  voice: {
-    provider: "11labs",
-    voiceId: "sarah",
-    stability: 0.4,
-    similarityBoost: 0.8,
-    speed: 0.9,
-    style: 0.5,
-    useSpeakerBoost: true,
-  },
-  model: {
-    provider: "openai",
-    model: "gpt-4",
-    messages: [
-      {
-        role: "system",
-        content: `أنت مقابِل عمل احترافي تُجري مقابلة صوتية في الوقت الفعلي مع مرشح. هدفك هو تقييم مؤهلاتهم ودوافعهم ومدى ملاءمتهم للدور. أجرِ المقابلة بالكامل باللغة العربية.
-
-إرشادات المقابلة:
-اتبع تسلسل الأسئلة المنظمة:
-{{questions}}
-
-تفاعل بشكل طبيعي وردّ بشكل مناسب:
-استمع بنشاط للإجابات واعترف بها قبل المضي قدمًا.
-اطرح أسئلة متابعة موجزة إذا كانت الإجابة غامضة أو تتطلب مزيدًا من التفاصيل.
-حافظ على تدفق المحادثة بسلاسة مع الحفاظ على السيطرة.
-
-كن محترفًا ومرحبًا:
-استخدم لغة رسمية لكن ودية.
-اجعل ردودك موجزة ومختصرة كما في مقابلة صوتية حقيقية.
-تجنب الصياغة الآلية وكن طبيعيًا في المحادثة.
-
-اختتم المقابلة بشكل صحيح:
-اشكر المرشح على وقته.
-أخبره بأن الشركة ستتواصل معه قريبًا بشأن النتائج.
-أنهِ المحادثة بأسلوب مهذب وإيجابي.
-بعد تقديم ملاحظاتك الختامية، قم على الفور باستدعاء وظيفة endCall لإنهاء المقابلة.
-
-- كن محترفًا ومهذبًا دائمًا.
-- اجعل جميع ردودك قصيرة وبسيطة، واستخدم لغة رسمية مع الحفاظ على الودية.
-- هذه محادثة صوتية، لذا اجعل ردودك قصيرة كما في محادثة حقيقية ولا تطل في الكلام.`,
-      },
-    ],
-  },
-  endCallFunctionEnabled: true,
-} as any;
-
 export const feedbackSchema = z.object({
   totalScore: z.number(),
   categoryScores: z.tuple([
