@@ -214,8 +214,14 @@ export const interviewerArabic: CreateAssistantDTO = {
     language: "ar",
   },
   voice: {
-    provider: "azure",
-    voiceId: "ar-SA-ZariyahNeural",
+    provider: "11labs",
+    voiceId: "sarah",
+    model: "eleven_multilingual_v2",
+    stability: 0.4,
+    similarityBoost: 0.8,
+    speed: 0.9,
+    style: 0.5,
+    useSpeakerBoost: true,
   },
   model: {
     provider: "openai",
